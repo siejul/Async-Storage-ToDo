@@ -19,15 +19,19 @@ export const ToDo = () => {
   });
 
   useEffect(() => {
-    getSaved();
+    getSaved(); // runs only once at mount
   });
 
   const handleCompleteAll = async () => {
-    const pairs: [string, string][] = saved.map((item) => {
-      const updatedItem = { ...item, done: true };
-      return [item.title, JSON.stringify(updatedItem)];
+    const updatedItems = saved.map((item) => {
+      return { ...item, done: true };
     });
+    setSaved(updatedItems);
+
     try {
+      const pairs: [string, string][] = updatedItems.map((item) => {
+        return [item.title, JSON.stringify(item)];
+      });
       await AsyncStorage.multiSet(pairs);
     } catch (e) {
       setIsError(true);
@@ -35,6 +39,7 @@ export const ToDo = () => {
   };
 
   const handleDeleteAll = async () => {
+    setSaved(new Array<Task>());
     try {
       await AsyncStorage.clear();
     } catch (e) {
@@ -44,8 +49,19 @@ export const ToDo = () => {
 
   const handleNewTask = async () => {
     if (newTask.title !== "") {
-      const value = JSON.stringify(newTask);
+      const index = saved.findIndex((item) => item.title === newTask.title);
+      if (index === -1) {
+        setSaved(saved.concat(new Array<Task>(newTask))); // task not present, add to end
+      } else {
+        const updatedItems = saved
+          .slice(0, index)
+          .concat(new Array<Task>(newTask))
+          .concat(saved.slice(index + 1, saved.length));
+        setSaved(updatedItems); // task present, update task
+      }
+
       try {
+        const value = JSON.stringify(newTask);
         await AsyncStorage.setItem(newTask.title, value);
       } catch (e) {
         setIsError(true);
@@ -54,15 +70,23 @@ export const ToDo = () => {
   };
 
   const handleUpdate = async (task: Task) => {
-    const value = JSON.stringify(task);
+    const updatedItems = saved.map((item) => {
+      if (item.title === task.title) {
+        return task;
+      } else return item;
+    });
+    setSaved(updatedItems);
     try {
-      await AsyncStorage.setItem(newTask.title, value);
+      const value = JSON.stringify(task);
+      await AsyncStorage.setItem(task.title, value);
     } catch (e) {
       setIsError(true);
     }
   };
 
   const handleDelete = async (title: string) => {
+    const updatedItems = saved.filter((item) => item.title != title);
+    setSaved(updatedItems);
     try {
       await AsyncStorage.removeItem(title);
     } catch (e) {
@@ -181,7 +205,7 @@ export const BaseList = ({
             >
               <CheckBox
                 onIconPress={() => {
-                  const updatedItem = { ...item, done: !item.done };
+                  const updatedItem: Task = { ...item, done: !item.done };
                   handleUpdate(updatedItem);
                 }}
                 checked={item.done}
