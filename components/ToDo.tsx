@@ -20,7 +20,7 @@ export const ToDo = () => {
 
   useEffect(() => {
     getSaved(); // runs only once at mount
-  });
+  }, []);
 
   const handleCompleteAll = async () => {
     const updatedItems = saved.map((item) => {
