@@ -6,5 +6,7 @@ of react-native-async-storage.
 This app uses [react-native-async-storage](https://github.com/react-native-async-storage/async-storage)
 and [react-native-elements](https://reactnativeelements.com/) as dependencies.
 
+![](assets/Screenshot_ToDo_App.png)
+
 
 
